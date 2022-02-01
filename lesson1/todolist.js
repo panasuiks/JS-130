@@ -1,109 +1,170 @@
-// class Foo {
-//   constructor(prefix) {
-//     this.prefix = prefix;
-//   }
+class Todo {
+  static DONE_MARKER = 'X';
+  static UNDONE_MARKER = ' ';
 
-//   showItem(item) {
-//     console.log(this.prefix, item);
-//   }
-// }
+  constructor(title) {
+    this.title = title;
+    this.done = false
+  }
 
-// function forEach(func, thisArg) {
-//   let length = this.length;
-//   for (let index = 0; index < length; index += 1) {
-//     func.call(thisArg, this[index], index, this);
-//   }
-// }
+  toString() {
+    let marker = this.isDone() ? Todo.DONE_MARKER : Todo.UNDONE_MARKER;
+    return `[${marker}] ${this.title}`;
+  }
 
-// let foo = new Foo('Item: ');
+  markDone() {
+    this.done = true;
+  }
 
-// arr.forEach(foo.showItem, foo)
-// arr.forEach(foo.showItem);
+  markUndone() {
+    this.done = false;
+  }
 
-function forEach(func, thisArg) {
-  let length = this.length;
-  for (let index = 0; index < length; index += 1) {
-    func.call(thisArg, this[index], index, this);
+  isDone() {
+    return this.done;
+  }
+
+  getTitle() {
+    return this.title;
   }
 }
 
-function filter(func) {
-  let length = this.length;
-  let result = [];
-  for (let index = 0; index < length; index += 1) {
-    if (func(this[index])) {
-      result.push(this[index]);
+class TodoList {
+  constructor(title) {
+    this.title = title;
+    this.todos = [];
+  }
+
+  add(todo) {
+    if (!(todo instanceof Todo)) {
+      throw new TypeError('can only add Todo objects')
+    }
+    this.todos.push(todo);
+  }
+
+  getTitle() {
+    return this.title;
+  }
+
+  size() {
+    return this.todos.length;
+  }
+
+  first() {
+    return this.todos[0];
+  }
+
+  last() {
+    return this.todos[this.size() - 1];
+  }
+
+  itemAt(index) {
+    this._validateIndex(index);
+    return this.todos[index];
+  }
+
+  markDoneAt(index) {
+    this.itemAt(index).markDone()
+  }
+
+  markUndoneAt(index) {
+    this.itemAt(index).markUndone()
+  }
+
+  isDone() {
+    return this.todos.every(todo => todo.isDone())
+  }
+
+  shift() {
+    return this.todos.shift();
+  }
+
+  pop() {
+    return this.todos.pop();
+  }
+
+  removeAt(index) {
+    this._validateIndex(index);
+    return this.todos.splice(index, 1);
+  }
+
+  toString() {
+    let returnArray = [`---- ${this.title} ----`]
+    this.todos.forEach(todo => {
+      returnArray.push(todo.toString());
+    })
+    return returnArray.join('\n');
+  }
+
+  _validateIndex(index) {
+    if (typeof index !== 'number' || index < 0 || index > this.todos.length - 1) {
+      throw new ReferenceError(`invalid index: ${index}`);
     }
   }
-  return result;
-}
 
-function map(func) {
-  let length = this.length;
-  let result = [];
-  for (let index = 0; index < length; index += 1) {
-    result.push(func(this[index]));
+  forEach(callback, thisArg) {
+    for (let todo of this.todos) {
+      callback.call(thisArg, todo);
+    }
   }
-  return result;
-}
 
-function reduce(callback, start) {
-  let result = start;
-  let firstIndex = 0;
-  if (start === undefined) {
-    result = this[0];
-    firstIndex = 1;
+  filter(callback, thisArg) {
+    let returnTodoList = new TodoList(this.getTitle());
+    this.forEach(todo => {
+      if (callback.call(thisArg, todo)) returnTodoList.add(todo);;
+    })
+    return returnTodoList;
   }
-  for (let index = firstIndex; index < this.length; index += 1) {
-    result = callback(result, this[index]);
+
+  findByTitle(title) {
+    return this.filter(todo => todo.getTitle() === title).first();
   }
-  return result;
+
+  allDone() {
+    return this.filter(todo => todo.isDone());
+  }
+
+  allNotDone() {
+    return this.filter(todo => !todo.isDone());
+  }
+
+  markDone(title) {
+    if (this.findByTitle(title) instanceof Todo) {
+      this.findByTitle(title).markDone();
+    }
+  }
+
+  markAllDone() {
+    this.forEach(todo => todo.markDone());
+  }
+
+  markAllUndone() {
+    this.forEach(todo => todo.markUndone());
+  }
+
+  toArray() {
+    return this.todos.slice();
+  }
 }
 
-function filter2(callback) {
-  return this.reduce(function(prev, current) {
-    if (callback(current)) {
-      prev.push(current)
-    } 
-    return prev;
-  }, [])
-}
+let todo1 = new Todo("Buy milk");
+let todo2 = new Todo("Clean room");
+let todo3 = new Todo("Go to the gym");
+let todo4 = new Todo("Go shopping");
+let todo5 = new Todo("Feed the cats");
+let todo6 = new Todo("Study for Launch School");
+let todo7 = new Todo("Go to the gym");
+let list = new TodoList("Today's Todos");
 
-function map2(callback) {
-  return this.reduce(function(prev, current) {
-    prev.push(callback(current))
-    return prev;
-  }, []);
-}
-
-
-let arr = [1, 2, 3];
-arr.forEach = forEach;
-arr.filter = filter;
-arr.map = map;
-arr.reduce = reduce;
-arr.filter2 = filter2;
-arr.map2 = map2;
-
-// arr.forEach(function (value, index, arr) {
-//   console.log(`After ${value} comes ${arr[index + 1]}`);
-// })
-
-// console.log(arr.filter(value => {
-//   return value === 'a' || value === 'b';
-// }))
-
-console.log(arr.filter2(value => {
-  return value < 3;
-}))
+list.add(todo1);
+list.add(todo2);
+list.add(todo3);
+list.add(todo4);
+list.add(todo5);
+list.add(todo6);
+list.add(todo7);
+todo1.markDone();
+todo4.markDone();
+todo7.markDone();
 
 
-console.log(arr.map2(value => {
-  return value + 'test';
-}))
-
-// // console.log(arr.reduce((accum, number) => accum + number));   // => 15
-// // console.log(arr.reduce((prod, number) => prod * number));     // => 120
-// // console.log(arr.reduce((prod, number) => prod * number, 3));  // => 360
-// console.log(arr.reduce((accum, number) => accum + number, 10));    // => 10
-// console.log(arr.reduce((accum, number) => accum + number));
